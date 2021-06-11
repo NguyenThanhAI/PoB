@@ -40,16 +40,8 @@ def get_args():
 
 def decode_img(img, target_height=256, target_width=256):
     img = tf.image.decode_jpeg(img, channels=3)
-    img_shape = tf.shape(img)
-    img_height = img_shape[0]
-    img_width = img_shape[1]
-    target_height_const = tf.constant(target_height)
-    target_width_const = tf.constant(target_width)
-    img = tf.cond(tf.logical_and(tf.equal(img_height, target_height_const),
-                                 tf.equal(img_width, target_width_const)),
-                  lambda: img,
-                  lambda: tf.cast(tf.image.resize(img, size=(target_height, target_width), method=tf.image.ResizeMethod.BICUBIC), dtype=tf.uint8))
-    #img = tf.cast(img, dtype=tf.uint8)
+    img = tf.image.resize(img, size=(target_height, target_width), method=tf.image.ResizeMethod.BICUBIC)
+    img = tf.cast(img, dtype=tf.uint8)
     return img
 
 
