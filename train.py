@@ -195,7 +195,7 @@ if __name__ == '__main__':
 
     inputs = keras.Input(shape=(target_height, target_width, 3))
 
-    pretrained_model = keras.applications.EfficientNetB5(input_shape=(target_height, target_width, 3),
+    pretrained_model = keras.applications.EfficientNetB3(input_shape=(target_height, target_width, 3),
                                                          include_top=False, weights="imagenet")
     pretrained_model.trainable = False
 
