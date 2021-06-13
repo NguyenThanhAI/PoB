@@ -99,7 +99,7 @@ augment_seq = iaa.Sequential(
         #        #]),
         #        #iaa.CoarseDropout((0.03, 0.15), size_percent=(0.1, 0.2), per_channel=0.2),
         #        iaa.Invert(0.05, per_channel=True), # invert color channels
-                iaa.Add((-5, 5), per_channel=0.5), # change brightness of images (by -10 to 10 of original value)
+                iaa.Add((-10, 10), per_channel=0.5), # change brightness of images (by -10 to 10 of original value)
                 iaa.AddToHueAndSaturation((-20, 20)), # change hue and saturation
         #        # either change the brightness of the whole image (sometimes
         #        # per channel) or change the brightness of subareas
@@ -113,9 +113,9 @@ augment_seq = iaa.Sequential(
         #        ]),
         #        iaa.LinearContrast((0.1, 0.5), per_channel=0.5), # improve or worsen the contrast
                 iaa.Grayscale(alpha=(0.0, 1.0)),
-        #        #sometimes(iaa.ElasticTransformation(alpha=(2.0, 10.0), sigma=0.25)), # move pixels locally around (with random strengths) # Nên bỏ đi
-        #        sometimes(iaa.PiecewiseAffine(scale=(0.01, 0.05))), # sometimes move parts of the image around
-        #        sometimes(iaa.PerspectiveTransform(scale=(0.01, 0.1))),
+                sometimes(iaa.ElasticTransformation(alpha=(1.0, 3.0), sigma=0.25)), # move pixels locally around (with random strengths) # Nên bỏ đi
+                sometimes(iaa.PiecewiseAffine(scale=(0.01, 0.05))), # sometimes move parts of the image around
+                sometimes(iaa.PerspectiveTransform(scale=(0.01, 0.05))),
         #        #sometimes(iaa.Jigsaw(nb_rows=(3, 5), nb_cols=(3, 5)))
             ],
             random_order=True
@@ -218,7 +218,7 @@ if __name__ == '__main__':
                                                  save_weights_only=True,
                                                  mode="max"),
                  keras.callbacks.EarlyStopping(monitor="val_sparse_categorical_accuracy", min_delta=0.001,
-                                               patience=20, verbose=1, mode="max",
+                                               patience=100, verbose=1, mode="max",
                                                restore_best_weights=True),
                  # keras.callbacks.EarlyStopping(monitor="val_loss", min_delta=0.001,
                  #                                  patience=5, verbose=1, mode="min",
@@ -236,7 +236,7 @@ if __name__ == '__main__':
 
     pretrained_model.trainable = True
     learning_rate = learning_rate / 20
-    num_epochs = 100
+    num_epochs = 400
 
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
