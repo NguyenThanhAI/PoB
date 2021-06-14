@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     inputs = keras.Input(shape=(target_height, target_width, 3))
 
-    inputs = tf.cast(inputs, dtype=tf.float32)
+    #inputs = tf.cast(inputs, dtype=tf.float32)
     if arch.lower() == "efficientnetb0":
         preprocessed_inputs = keras.applications.efficientnet.preprocess_input(inputs)
         pretrained_model = keras.applications.EfficientNetB0(input_shape=(target_height, target_width, 3),
@@ -151,7 +151,7 @@ if __name__ == '__main__':
                                                        include_top=False, weights="imagenet")
     else:
         raise ValueError("Unknown architecture: {}".format(arch.lower()))
-    
+
     pretrained_model.trainable = False
 
     x = pretrained_model(preprocessed_inputs, training=False)
