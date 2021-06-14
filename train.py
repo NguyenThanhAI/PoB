@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     model.summary()
 
-    callbacks = [keras.callbacks.ModelCheckpoint(filepath=os.path.join(checkpoint_dir, "best_model.h5"),
+    callbacks = [keras.callbacks.ModelCheckpoint(filepath=os.path.join(checkpoint_dir, "{}_best_model.h5".format(arch)),
                                                  monitor="val_sparse_categorical_accuracy",
                                                  verbose=1, save_best_only=True,
                                                  save_weights_only=True,
@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
     model.summary()
 
-    callbacks = [keras.callbacks.ModelCheckpoint(filepath=os.path.join(checkpoint_dir, "best_model.h5"),
+    callbacks = [keras.callbacks.ModelCheckpoint(filepath=os.path.join(checkpoint_dir, "{}_best_model.h5".format(arch)),
                                                  monitor="val_sparse_categorical_accuracy",
                                                  verbose=1, save_best_only=True,
                                                  save_weights_only=True,
