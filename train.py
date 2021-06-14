@@ -180,8 +180,9 @@ if __name__ == '__main__':
                  #                                  restore_best_weights=True),
                  # keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=1,
                  #                                  verbose=1, mode="min", min_lr=1e-6),
-                 keras.callbacks.ReduceLROnPlateau(monitor="val_sparse_categorical_accuracy", factor=0.8, patience=1,
-                                                   verbose=1, mode="max", min_lr=1e-7)]
+                 #keras.callbacks.ReduceLROnPlateau(monitor="val_sparse_categorical_accuracy", factor=0.8, patience=1,
+                 #                                  verbose=1, mode="max", min_lr=1e-7)
+                 ]
 
     print("Training the last layer")
     num_epochs = 5
@@ -214,15 +215,6 @@ if __name__ == '__main__':
     compare = [np.all(np.equal(a, b)) for a, b in zip(weights_1, weights_2)]
     print(compare)
     assert all(compare), "Two weights are not equal"
-
-    callbacks = [keras.callbacks.ModelCheckpoint(filepath=os.path.join(checkpoint_dir, "{}_best_model.h5".format(arch)),
-                                                 monitor="val_sparse_categorical_accuracy",
-                                                 verbose=1, save_best_only=True,
-                                                 save_weights_only=True,
-                                                 mode="max"),
-                 keras.callbacks.EarlyStopping(monitor="val_sparse_categorical_accuracy", min_delta=0.001,
-                                               patience=100, verbose=1, mode="max",
-                                               restore_best_weights=True)]
 
     print("Finetuning whole network")
     initial_epoch = history.epoch[-1]
