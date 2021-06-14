@@ -167,8 +167,6 @@ if __name__ == '__main__':
 
     model.summary()
 
-    weights_1 = model.get_weights()
-
     callbacks = [keras.callbacks.ModelCheckpoint(filepath=os.path.join(checkpoint_dir, "{}_best_model.h5".format(arch)),
                                                  monitor="val_sparse_categorical_accuracy",
                                                  verbose=1, save_best_only=True,
@@ -190,6 +188,8 @@ if __name__ == '__main__':
     num_train_steps = num_train // batch_size
     history = model.fit(train_dataset, validation_data=val_dataset, steps_per_epoch=num_train_steps, epochs=num_epochs,
                         callbacks=callbacks)
+
+    weights_1 = model.get_weights()
 
     pretrained_model.trainable = True
     #learning_rate = learning_rate / 20
