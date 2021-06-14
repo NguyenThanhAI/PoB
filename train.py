@@ -66,6 +66,8 @@ if __name__ == '__main__':
 
     x = pretrained_model(preprocessed_inputs, training=False)
     x = keras.layers.GlobalAveragePooling2D()(x)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.ReLU()(x)
     outputs = keras.layers.Dense(num_classes)(x)
     model = keras.Model(inputs, outputs)
 
@@ -90,8 +92,8 @@ if __name__ == '__main__':
                  #                                  restore_best_weights=True),
                  # keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=1,
                  #                                  verbose=1, mode="min", min_lr=1e-6),
-                 #keras.callbacks.ReduceLROnPlateau(monitor="val_sparse_categorical_accuracy", factor=0.8, patience=1,
-                 #                                  verbose=1, mode="max", min_lr=1e-7)
+                 keras.callbacks.ReduceLROnPlateau(monitor="val_sparse_categorical_accuracy", factor=0.9, patience=1,
+                                                   verbose=1, mode="max", min_lr=1e-7)
                  ]
 
     print("Training the last layer")
@@ -103,12 +105,12 @@ if __name__ == '__main__':
     weights_1 = model.get_weights()
 
     pretrained_model.trainable = True
-    #learning_rate = learning_rate / 20
-    learning_rate = tfa.optimizers.ExponentialCyclicalLearningRate(initial_learning_rate=1e-7,
-                                                                   maximal_learning_rate=1e-3,
-                                                                   step_size=float(num_train_steps),
-                                                                   scale_mode="cycle",
-                                                                   gamma=0.95)
+    learning_rate = learning_rate / 20
+    #learning_rate = tfa.optimizers.ExponentialCyclicalLearningRate(initial_learning_rate=1e-7,
+    #                                                               maximal_learning_rate=1e-3,
+    #                                                               step_size=float(num_train_steps),
+    #                                                               scale_mode="cycle",
+    #                                                               gamma=0.95)
     num_epochs = 400
 
     model.compile(
