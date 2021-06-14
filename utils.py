@@ -1,3 +1,21 @@
+import os
+import argparse
+
+from typing import Tuple
+
+import pandas as pd
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+import numpy as np
+
+import cv2
+
+import tensorflow as tf
+import tensorflow_addons as tfa
+from tensorflow import keras
+
 import imgaug as ia
 from imgaug import augmenters as iaa
 
@@ -74,3 +92,164 @@ augment_seq = iaa.Sequential(
     ],
     random_order=True
 )
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--prefix", type=str, default="Painting")
+    parser.add_argument("--prefix_dir", type=str, default=None)
+    parser.add_argument("--data_dir", type=str, default=None)
+
+    parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--target_height", type=int, default=256)
+    parser.add_argument("--target_width", type=int, default=256)
+
+    parser.add_argument("--learning_rate", type=float, default=1e-3)
+    parser.add_argument("--checkpoint_dir", type=str, default=None)
+
+    parser.add_argument("--arch", type=str, default=None)
+
+    args = parser.parse_args()
+
+    return args
+
+
+def decode_img(img, target_height=256, target_width=256):
+    img = tf.image.decode_jpeg(img, channels=3)
+    img = tf.image.resize(img, size=(target_height, target_width), method=tf.image.ResizeMethod.BICUBIC)
+    img = tf.cast(img, dtype=tf.uint8)
+    return img
+
+
+def process_path(file_path, target_height=256, target_width=256):
+    img = tf.io.read_file(file_path)
+    img = decode_img(img, target_height=target_height, target_width=target_width)
+    return img
+
+
+def augment_fn(image: tf.Tensor, label: tf.Tensor):
+  image = tf.numpy_function(augment_seq.augment_images,
+                            [image],
+                            image.dtype)
+  image = tf.cast(image, dtype=tf.uint8)
+  #image = keras.applications.resnet50.preprocess_input(image) # Với EfficientNet phải comment dòng này
+  return image, label
+
+
+def get_dataset(csv_path: str, data_dir: str, batch_size: int, target_height: int, target_width: int, is_training=True) -> Tuple[tf.data.Dataset, int]:
+    df = pd.read_csv(csv_path)
+    images_list = df["image_id"].to_list()
+    images_list = list(map(lambda x: os.path.join(data_dir, x), images_list))
+    labels_list = df["class"].to_numpy() - 1 # Huhu, quên trừ đi 1
+    images_data = tf.data.Dataset.from_tensor_slices(images_list)
+    labels_data = tf.data.Dataset.from_tensor_slices(labels_list)
+    dataset = tf.data.Dataset.zip((images_data, labels_data))
+    num_elements = dataset.cardinality().numpy()
+    dataset = dataset.cache()
+    dataset = dataset.map(lambda image, label: (process_path(image, target_height=target_height, target_width=target_width), label), num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    if is_training:
+        dataset = dataset.shuffle(2048)
+        dataset = dataset.repeat()
+    dataset = dataset.batch(batch_size, drop_remainder=True)
+    if is_training:
+        dataset = dataset.map(lambda image, label: augment_fn(image=image, label=label))
+    dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
+
+    return dataset, num_elements
+
+
+def get_network(inputs: keras.Input, arch: str, target_height: int, target_width: int):
+    inputs = tf.cast(inputs, dtype=tf.float32)
+    if arch.lower() == "efficientnetb0":
+        preprocessed_inputs = keras.applications.efficientnet.preprocess_input(inputs)
+        pretrained_model = keras.applications.EfficientNetB0(input_shape=(target_height, target_width, 3),
+                                                             include_top=False, weights="imagenet")
+    elif arch.lower() == "efficientnetb1":
+        preprocessed_inputs = keras.applications.efficientnet.preprocess_input(inputs)
+        pretrained_model = keras.applications.EfficientNetB1(input_shape=(target_height, target_width, 3),
+                                                             include_top=False, weights="imagenet")
+    elif arch.lower() == "efficientnetb2":
+        preprocessed_inputs = keras.applications.efficientnet.preprocess_input(inputs)
+        pretrained_model = keras.applications.EfficientNetB2(input_shape=(target_height, target_width, 3),
+                                                             include_top=False, weights="imagenet")
+    elif arch.lower() == "efficientnetb3":
+        preprocessed_inputs = keras.applications.efficientnet.preprocess_input(inputs)
+        pretrained_model = keras.applications.EfficientNetB3(input_shape=(target_height, target_width, 3),
+                                                             include_top=False, weights="imagenet")
+    elif arch.lower() == "efficientnetb4":
+        preprocessed_inputs = keras.applications.efficientnet.preprocess_input(inputs)
+        pretrained_model = keras.applications.EfficientNetB4(input_shape=(target_height, target_width, 3),
+                                                             include_top=False, weights="imagenet")
+    elif arch.lower() == "efficientnetb5":
+        preprocessed_inputs = keras.applications.efficientnet.preprocess_input(inputs)
+        pretrained_model = keras.applications.EfficientNetB5(input_shape=(target_height, target_width, 3),
+                                                             include_top=False, weights="imagenet")
+    elif arch.lower() == "efficientnetb6":
+        preprocessed_inputs = keras.applications.efficientnet.preprocess_input(inputs)
+        pretrained_model = keras.applications.EfficientNetB6(input_shape=(target_height, target_width, 3),
+                                                             include_top=False, weights="imagenet")
+    elif arch.lower() == "efficientnetb7":
+        preprocessed_inputs = keras.applications.efficientnet.preprocess_input(inputs)
+        pretrained_model = keras.applications.EfficientNetB7(input_shape=(target_height, target_width, 3),
+                                                             include_top=False, weights="imagenet")
+    elif arch.lower() == "resnet50":
+        preprocessed_inputs = keras.applications.resnet50.preprocess_input(inputs)
+        pretrained_model = keras.applications.ResNet50(input_shape=(target_height, target_width, 3),
+                                                       include_top=False, weights="imagenet")
+    elif arch.lower() == "resnet101":
+        preprocessed_inputs = keras.applications.resnet.preprocess_input(inputs)
+        pretrained_model = keras.applications.ResNet101(input_shape=(target_height, target_width, 3),
+                                                        include_top=False, weights="imagenet")
+    elif arch.lower() == "resnet152":
+        preprocessed_inputs = keras.applications.resnet.preprocess_input(inputs)
+        pretrained_model = keras.applications.ResNet152(input_shape=(target_height, target_width, 3),
+                                                        include_top=False, weights="imagenet")
+    elif arch.lower() == "resnet50v2":
+        preprocessed_inputs = keras.applications.resnet_v2.preprocess_input(inputs)
+        pretrained_model = keras.applications.ResNet50V2(input_shape=(target_height, target_width, 3),
+                                                         include_top=False, weights="imagenet")
+    elif arch.lower() == "resnet101v2":
+        preprocessed_inputs = keras.applications.resnet_v2.preprocess_input(inputs)
+        pretrained_model = keras.applications.ResNet101V2(input_shape=(target_height, target_width, 3),
+                                                          include_top=False, weights="imagenet")
+    elif arch.lower() == "resnet152v2":
+        preprocessed_inputs = keras.applications.resnet_v2.preprocess_input(inputs)
+        pretrained_model = keras.applications.ResNet152V2(input_shape=(target_height, target_width, 3),
+                                                          include_top=False, weights="imagenet")
+    elif arch.lower() == "vgg16":
+        preprocessed_inputs = keras.applications.vgg16.preprocess_input(inputs)
+        pretrained_model = keras.applications.VGG16(input_shape=(target_height, target_width, 3),
+                                                    include_top=False, weights="imagenet")
+    elif arch.lower() == "vgg19":
+        preprocessed_inputs = keras.applications.vgg19.preprocess_input(inputs)
+        pretrained_model = keras.applications.VGG19(input_shape=(target_height, target_width, 3),
+                                                    include_top=False, weights="imagenet")
+    elif arch.lower() == "densenet121":
+        preprocessed_inputs = keras.applications.densenet.preprocess_input(inputs)
+        pretrained_model = keras.applications.DenseNet121(input_shape=(target_height, target_width, 3),
+                                                          include_top=False, weights="imagenet")
+    elif arch.lower() == "densenet169":
+        preprocessed_inputs = keras.applications.densenet.preprocess_input(inputs)
+        pretrained_model = keras.applications.DenseNet169(input_shape=(target_height, target_width, 3),
+                                                          include_top=False, weights="imagenet")
+    elif arch.lower() == "densenet201":
+        preprocessed_inputs = keras.applications.densenet.preprocess_input(inputs)
+        pretrained_model = keras.applications.DenseNet201(input_shape=(target_height, target_width, 3),
+                                                          include_top=False, weights="imagenet")
+    elif arch.lower() == "inceptionv3":
+        preprocessed_inputs = keras.applications.inception_v3.preprocess_input(inputs)
+        pretrained_model = keras.applications.InceptionV3(input_shape=(target_height, target_width, 3),
+                                                          include_top=False, weights="imagenet")
+    elif arch.lower() == "inceptionresnetv2":
+        preprocessed_inputs = keras.applications.inception_resnet_v2.preprocess_input(inputs)
+        pretrained_model = keras.applications.InceptionResNetV2(input_shape=(target_height, target_width, 3),
+                                                                include_top=False, weights="imagenet")
+    elif arch.lower() == "xception":
+        preprocessed_inputs = keras.applications.xception.preprocess_input(inputs)
+        pretrained_model = keras.applications.Xception(input_shape=(target_height, target_width, 3),
+                                                       include_top=False, weights="imagenet")
+    else:
+        raise ValueError("Unknown architecture: {}".format(arch.lower()))
+
+    return  preprocessed_inputs, pretrained_model
