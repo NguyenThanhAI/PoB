@@ -77,6 +77,8 @@ if __name__ == '__main__':
 
     model.summary()
 
+    weights_1 = model.get_weights()
+
     callbacks = [keras.callbacks.ModelCheckpoint(filepath=os.path.join(checkpoint_dir, "{}_best_model.h5".format(arch)),
                                                  monitor="val_sparse_categorical_accuracy",
                                                  verbose=1, save_best_only=True,
@@ -115,6 +117,13 @@ if __name__ == '__main__':
     )
 
     model.summary()
+
+    weights_2 = model.get_weights()
+
+    print("Compare model weight", end="")
+    compare = [np.all(np.equal(a, b)) for a, b in zip(weights_1, weights_2)]
+    print(compare)
+    assert all(compare), "Two weights are not equal"
 
     callbacks = [keras.callbacks.ModelCheckpoint(filepath=os.path.join(checkpoint_dir, "{}_best_model.h5".format(arch)),
                                                  monitor="val_sparse_categorical_accuracy",
