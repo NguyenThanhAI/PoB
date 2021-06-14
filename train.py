@@ -103,7 +103,7 @@ if __name__ == '__main__':
     #learning_rate = learning_rate / 20
     learning_rate = tfa.optimizers.ExponentialCyclicalLearningRate(initial_learning_rate=1e-6,
                                                                    maximal_learning_rate=1e-4,
-                                                                   step_size=2*num_train_steps,
+                                                                   step_size=float(2 * num_train_steps),
                                                                    scale_mode="cycle",
                                                                    gamma=0.95)
     num_epochs = 400
