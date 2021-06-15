@@ -68,6 +68,8 @@ if __name__ == '__main__':
     x = keras.layers.GlobalAveragePooling2D()(x)
     #x = keras.layers.BatchNormalization()(x)
     x = keras.layers.ReLU()(x)
+    x = keras.layers.Dense(1024)(x)
+    x = keras.layers.ReLu()(x)
     outputs = keras.layers.Dense(num_classes)(x)
     model = keras.Model(inputs, outputs)
 
