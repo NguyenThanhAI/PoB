@@ -16,7 +16,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow import keras
 
-from utils import get_args, get_dataset, get_network
+from utils import SpatialAttentionLayer, get_args, get_dataset, get_network
 
 
 if __name__ == '__main__':
@@ -65,6 +65,8 @@ if __name__ == '__main__':
     pretrained_model.trainable = False
 
     x = pretrained_model(preprocessed_inputs, training=False)
+    x = SpatialAttentionLayer()(x)
+    x = keras.layers.ReLU()(x)
     x = keras.layers.GlobalAveragePooling2D()(x)
     #x = keras.layers.BatchNormalization()(x)
     x = keras.layers.ReLU()(x)
@@ -94,7 +96,7 @@ if __name__ == '__main__':
                  #                                  restore_best_weights=True),
                  # keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=1,
                  #                                  verbose=1, mode="min", min_lr=1e-6),
-                 keras.callbacks.ReduceLROnPlateau(monitor="val_sparse_categorical_accuracy", factor=0.9, patience=1,
+                 keras.callbacks.ReduceLROnPlateau(monitor="val_sparse_categorical_accuracy", factor=0.95, patience=1,
                                                    verbose=1, mode="max", min_lr=1e-7)
                  ]
 

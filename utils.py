@@ -20,6 +20,39 @@ import imgaug as ia
 from imgaug import augmenters as iaa
 
 
+class SpatialAttentionLayer(keras.layers.Layer):
+    def __init__(self):
+        super(SpatialAttentionLayer, self).__init__()
+        self.gamma = tf.Variable(initial_value=0., shape=[], name="gamma")
+
+    def build(self, input_shape):
+        ch = input_shape[-1]
+        self.f_conv = tfa.layers.SpectralNormalization(layer=keras.layers.Conv2D(filters=ch // 8, kernel_size=1))
+        self.g_conv =  tfa.layers.SpectralNormalization(layer=keras.layers.Conv2D(filters=ch // 8, kernel_size=1))
+        self.h_conv = tfa.layers.SpectralNormalization(layer=keras.layers.Conv2D(filters=ch, kernel_size=1))
+
+    def call(self, inputs, **kwargs):
+        self.f = self.f_conv(inputs)
+        self.g = self.g_conv(inputs)
+        self.h = self.h_conv(inputs)
+
+        self.f = tf.reshape(self.f, shape=[tf.shape(self.f)[0], -1, tf.shape(self.f)[-1]])
+        self.g = tf.reshape(self.g, shape=[tf.shape(self.g)[0], -1, tf.shape(self.g)[-1]])
+        self.h = tf.reshape(self.h, shape=[tf.shape(self.h)[0], -1, tf.shape(self.h)[-1]])
+
+        s = tf.matmul(self.g, self.f, transpose_b=True)
+
+        beta = tf.nn.softmax(s)
+
+        o = tf.matmul(beta, self.h)
+
+        o = tf.reshape(o, shape=tf.shape(inputs))
+
+        output = self.gamma * o + inputs
+
+        return output
+
+
 sometimes = lambda aug: iaa.Sometimes(0.8, aug)
 
 augment_seq = iaa.Sequential(
