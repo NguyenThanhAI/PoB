@@ -143,8 +143,6 @@ def get_args():
 
     parser.add_argument("--arch", type=str, default=None)
 
-    parser.add_argument("--memory_fraction", type=float, default=1.)
-
     args = parser.parse_args()
 
     return args

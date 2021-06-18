@@ -39,17 +39,6 @@ if __name__ == '__main__':
 
     arch = args.arch
 
-    memory_fraction = args.memory_fraction
-
-    assert 0 < memory_fraction <= 1.
-
-    physical_devices = tf.config.list_physical_devices("GPU")
-
-    if len(physical_devices) > 0:
-        tf.config.experimental.set_memory_growth(physical_devices[0], True)
-        tf.config.experimental.set_virtual_device_configuration(physical_devices[0],
-                                                                [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=5120)])
-
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir, exist_ok=True)
 
@@ -75,7 +64,7 @@ if __name__ == '__main__':
                                                         target_width=target_width)
     pretrained_model.trainable = False
 
-    x = pretrained_model(preprocessed_inputs, training=False)
+    x = pretrained_model(preprocessed_inputs, training=True)
     x = SpatialAttentionLayer()(x)
     x = keras.layers.ReLU()(x)
     x = keras.layers.GlobalAveragePooling2D()(x)
